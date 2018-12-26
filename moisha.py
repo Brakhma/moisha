@@ -473,7 +473,8 @@ if proxxx: telepot.api.set_proxy('https://'+proxxx)
 bot = YourBot(TOKEN)
 bot.message_loop()
 
-print (Fore.YELLOW + bot.getMe()['first_name']+' (@'+bot.getMe()['username']+')'+Fore.WHITE)	
+print (Fore.YELLOW + bot.getMe()['first_name']+' (@'+bot.getMe()['username']+')'+Fore.WHITE)
+weblog('started')
 
 getcourses_timer = threading.Timer(300, getcourses)
 getcourses_timer.name = 'getcourses_timer'
