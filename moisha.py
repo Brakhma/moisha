@@ -18,7 +18,10 @@ import threading
 
 init() #colorama init
 
+logfolder = "/var/www/brakhma.ru/html/botlogs/"
+
 #~~~~~~~~~MODULES
+os.chdir(os.path.dirname(__file__))
 from cryptoconverter import *
 
 #Загрузка словарей=============================
@@ -75,6 +78,7 @@ try:
 	if not check_table('chat_alerts'): cur.execute('''CREATE TABLE chat_alerts(id int, alerts)''') #[{time:'', valute:'', price:'', porog:''}]
 	if not check_table('settings'): cur.execute('''CREATE TABLE settings(setting, value)''')
 except Exception as err:
+	weblog(err)
 	print(err)
 db.commit()
 db.close()
@@ -98,6 +102,7 @@ def get_data(table, cond = False):
 		db.close()
 		return data
 	except Exception as err:
+		weblog(err)
 		print(err)
 
 def set_prices(bcinfo, polo):
@@ -112,7 +117,8 @@ def set_prices(bcinfo, polo):
 			db.close()
 			done = True
 		except Exception as err:
-				print(err)
+			weblog(err)
+			print(err)
 
 def get_prices(time):
 	db = sqlite3.connect('moisha.db')
@@ -120,8 +126,10 @@ def get_prices(time):
 	cur = db.cursor()
 	try:
 		cur.execute('''select * from prices where time < ? order by time desc''', (time,))
-	except:
-		create_db()
+	except Exception as err:
+		print(err)
+		weblog(err)
+		#create_db()
 	data = cur.fetchone()
 	#db.commit()
 	db.close()
@@ -182,6 +190,7 @@ def remove_alert(msg, valute):
 	try:
 		alerts = get_alerts(id)
 	except Exception as err:
+		weblog(err)
 		print(err)
 		
 	if alerts:
@@ -220,7 +229,8 @@ def set_setting(setting, value):
 			db.close()
 			done = True
 		except Exception as err:
-				print(err)
+			weblog(err)
+			print(err)
 
 #как называть пользователя в консоли и логах	
 def user_name(msg):
@@ -262,6 +272,10 @@ class YourBot(telepot.Bot):
 	def on_edited_chat_message(self, msg):
 		pass
 
+def weblog(param):
+	with open(logfolder+'moisha', 'a', encoding="utf8") as log:
+		log.write((datetime.now()).strftime("%d.%m.%Y %H:%M:%S") + '\n'+param+'\n')
+
 def say(msg,answer):
 	#обработка ключевых слов из словаря
 	if '[name]' in  answer: answer = answer.replace('[name]', user_name(msg))
@@ -297,6 +311,7 @@ def getcourses():
 		bcinfo = received_data
 	except Exception as err:
 		print(err)
+		weblog(err)
 		return False
 	#poloniex
 	try:
@@ -306,6 +321,7 @@ def getcourses():
 		polo = received_data
 	except Exception as err:
 		print(err)
+		weblog(err)
 		return False
 	set_prices(bcinfo,polo)
 	getcourses_timer = threading.Timer(300, getcourses)
@@ -398,6 +414,7 @@ def process (msg):
 					set_alert(msg, curr)
 		except Exception as err:
 			print (err)
+			weblog(err)
 			pass
 		return
 	if (msg['text'].lower().startswith('/noalert')):
@@ -417,6 +434,7 @@ def process (msg):
 				remove_alert(msg, curr)
 		except Exception as err:
 			print (err)
+			weblog(err)
 			pass
 		return
 	# %)		
@@ -444,12 +462,14 @@ if not isfile('tgtoken'):
 	open('tgtoken', 'w', encoding="utf8").write(TOKEN)
 else:
 	TOKEN = (open('tgtoken', encoding="utf8").read()).rstrip()
+'''
 if not isfile('proxy'):
 	proxxx = input('Введи https_proxy:port или жмякни enter если не нужен:')
 	open('proxy', 'w', encoding="utf8").write(proxxx)
 else:
 	proxxx = (open('proxy', encoding="utf8").read()).rstrip()
 if proxxx: telepot.api.set_proxy('https://'+proxxx)
+'''
 bot = YourBot(TOKEN)
 bot.message_loop()
 
