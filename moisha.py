@@ -273,7 +273,7 @@ class YourBot(telepot.Bot):
 		pass
 
 def weblog(param):
-	with open(logfolder+'moisha', 'a', encoding="utf8") as log:
+	with open(logfolder+'moisha.txt', 'a', encoding="utf8") as log:
 		log.write((datetime.now()).strftime("%d.%m.%Y %H:%M:%S") + '\n'+param+'\n')
 
 def say(msg,answer):
