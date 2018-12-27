@@ -21,7 +21,10 @@ init() #colorama init
 logfolder = "/var/www/brakhma.ru/html/botlogs/"
 
 #~~~~~~~~~MODULES
-os.chdir(os.path.dirname(__file__))
+try:
+	os.chdir(os.path.dirname(__file__))
+except:
+	pass
 from cryptoconverter import *
 
 #Загрузка словарей=============================
@@ -63,25 +66,17 @@ def loadreg():
 loadreg()
 
 #БАЗА=====================================
-def check_table(name):
-	db = sqlite3.connect('moisha.db')
-	cur = db.cursor()
-	cur.execute('''SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?''', (name,))
-	data = cur.fetchall()
-	db.close()
-	return data
-
-db = sqlite3.connect('moisha.db')
+db = sqlite3.connect('moisha.db', check_same_thread=False)
 cur = db.cursor()
+db.execute('VACUUM;')
 try:
-	if not check_table('prices'): cur.execute('''CREATE TABLE prices(time datetime, bcinfo, polo)''')
-	if not check_table('chat_alerts'): cur.execute('''CREATE TABLE chat_alerts(id int, alerts)''') #[{time:'', valute:'', price:'', porog:''}]
-	if not check_table('settings'): cur.execute('''CREATE TABLE settings(setting, value)''')
+	db.execute('''CREATE TABLE IF NOT EXISTS prices(time datetime, bcinfo, polo)''')
+	db.execute('''CREATE TABLE IF NOT EXISTS chat_alerts(id int, alerts)''') #[{time:'', valute:'', price:'', porog:''}]
+	db.execute('''CREATE TABLE IF NOT EXISTS settings(setting, value)''')
 except Exception as err:
 	weblog(err)
 	print(err)
 db.commit()
-db.close()
 
 def dict_factory(cursor, row):
 	d = {}
@@ -90,38 +85,44 @@ def dict_factory(cursor, row):
 	return d
 
 def get_data(table, cond = False):
+	global db
 	try:
-		db = sqlite3.connect('moisha.db')
-		db.row_factory = dict_factory
 		cur = db.cursor()
 		if cond:
 			cur.execute('''select * from '''+table+''' where '''+cond)
 		else:
 			cur.execute('''select * from '''+table)
 		data = cur.fetchall()
-		db.close()
 		return data
 	except Exception as err:
 		weblog(err)
 		print(err)
 
 def set_prices(bcinfo, polo):
+	global db
 	done = False
 	while not done:
 		try:
 		#if 1:
-			db = sqlite3.connect('moisha.db')
 			cur = db.cursor()
 			cur.execute('''insert into prices (time, bcinfo, polo) values (? , ? , ?)''', (datetime.now(), bcinfo, polo))
 			db.commit()
-			db.close()
 			done = True
 		except Exception as err:
 			weblog(err)
 			print(err)
 
+
+prices_cache = None
 def get_prices(time):
-	db = sqlite3.connect('moisha.db')
+	global db, prices_cache
+	if prices_cache: # слишком часто ходим в базу, бессмысленно и дорого.
+		timediff = (datetime.now() - datetime.strptime(prices_cache['time'][0:19], "%Y-%m-%d %H:%M:%S"))
+		#print(timediff)
+		mins = (timediff.seconds//60)%60
+		if mins < 2: 
+			#print(mins)
+			return prices_cache
 	db.row_factory = dict_factory
 	cur = db.cursor()
 	try:
@@ -129,11 +130,9 @@ def get_prices(time):
 	except Exception as err:
 		print(err)
 		weblog(err)
-		#create_db()
 	data = cur.fetchone()
-	#db.commit()
-	db.close()
 	#print(data)
+	prices_cache = data
 	return data
 
 def get_alerts(id):
@@ -141,13 +140,13 @@ def get_alerts(id):
 	return json.loads(result[0]['alerts'])
 
 def set_alert(msg, valute, porog = 1 ):
+	global db
 	id = msg['chat']['id']
 	if valute == 'btc':
 		valute = 'usd'
 	if not valid_valute(valute):
 		say(msg, 'Не знаю такой валюты.')
 		return
-	db = sqlite3.connect('moisha.db')
 	cur = db.cursor()
 	alerts = []
 	new_list = []
@@ -170,7 +169,6 @@ def set_alert(msg, valute, porog = 1 ):
 		new_list.append(alert)
 	cur.execute('''update chat_alerts set alerts = ? where id = ?''', (json.dumps(new_list), id,))
 	db.commit()
-	db.close()
 	try:
 		if msg['text']:
 			say(msg, 'Добавлен алерт '+valute+' с порогом '+str(porog)+'%')
@@ -178,13 +176,13 @@ def set_alert(msg, valute, porog = 1 ):
 		pass
 
 def remove_alert(msg, valute):
+	global db
 	id = msg['chat']['id']
 	if valute == 'btc':
 		valute = 'usd'
 	if not valid_valute(valute):
 		say(msg, 'Не знаю такой валюты.')
 		return
-	db = sqlite3.connect('moisha.db')
 	cur = db.cursor()
 	alerts = []
 	try:
@@ -203,7 +201,6 @@ def remove_alert(msg, valute):
 		return
 	cur.execute('''update chat_alerts set alerts = ? where id = ?''', (json.dumps(alerts), id,))
 	db.commit()
-	db.close()
 	say(msg, 'Алерт '+valute+' удалён.')
 
 def get_setting(setting):
@@ -211,6 +208,7 @@ def get_setting(setting):
 	return result['value']
 
 def set_setting(setting, value):
+	global db
 	done = False
 	try:
 		have_opt = get_setting(setting)
@@ -219,14 +217,12 @@ def set_setting(setting, value):
 	while not done:
 		try:
 		#if 1:
-			db = sqlite3.connect('moisha.db')
 			cur = db.cursor()
 			if not have_opt:
 				cur.execute('''insert into settings (setting, value) values (? , ?)''',(setting, value,))
 				db.commit()
 			cur.execute('''update settings set value = ? where setting = ?''', (value, setting,))
 			db.commit()
-			db.close()
 			done = True
 		except Exception as err:
 			weblog(err)
@@ -273,8 +269,12 @@ class YourBot(telepot.Bot):
 		pass
 
 def weblog(param):
-	with open(logfolder+'moisha.txt', 'a', encoding="utf8") as log:
-		log.write((datetime.now()).strftime("%d.%m.%Y %H:%M:%S") + '\n'+param+'\n')
+	try:
+		with open(logfolder+'moisha.txt', 'a', encoding="utf8") as log:
+			log.write((datetime.now()).strftime("%d.%m.%Y %H:%M:%S") + '\n'+param+'\n')
+	except FileNotFoundError:
+		print('Weblog folder not found.')
+		pass		
 
 def say(msg,answer):
 	#обработка ключевых слов из словаря
@@ -324,6 +324,7 @@ def getcourses():
 		weblog(err)
 		return False
 	set_prices(bcinfo,polo)
+	do_chat_alerts()
 	getcourses_timer = threading.Timer(300, getcourses)
 	getcourses_timer.name = 'getcourses_timer'
 	getcourses_timer.start()
@@ -383,7 +384,7 @@ def kurs (valute = False):
 		return course_fiat(valute)
 
 def process (msg):
-	global reg_answers, pause
+	global reg_answers, pause, db
 	answer = ''
 	if (msg['text'].lower().startswith('/alert')):
 		try:
@@ -423,11 +424,9 @@ def process (msg):
 				say(msg, 'Алерт на какую валюту удалить?')
 			elif (msg['text'].lower() == '/noalerts'):
 				id = msg['chat']['id']
-				db = sqlite3.connect('moisha.db')
 				cur = db.cursor()
 				cur.execute('''update chat_alerts set alerts = ? where id = ?''', (json.dumps([]), id,))
 				db.commit()
-				db.close()
 				say(msg,'Все алерты удалены.')
 			else:
 				curr = (msg['text'].lower()).partition('/noalert ')[2]
@@ -476,17 +475,17 @@ bot.message_loop()
 print (Fore.YELLOW + bot.getMe()['first_name']+' (@'+bot.getMe()['username']+')'+Fore.WHITE)
 weblog('started')
 
-getcourses_timer = threading.Timer(300, getcourses)
-getcourses_timer.name = 'getcourses_timer'
-getcourses_timer.start()
-
 def stopthreads():
 	for thing in threading.enumerate():
 		if isinstance(thing, threading.Timer):
 			thing.cancel()
 	print ("Все потоки успешно завершены.")
 
-getcourses()
+def printthreads():
+	strr=''
+	for thing in threading.enumerate():
+		strr+= str(thing)+'\n'
+	print (strr)
 
 def make_pricelist(prices):
 	pricelist = {}
@@ -502,46 +501,52 @@ def make_pricelist(prices):
 	#print(pricelist)
 	return pricelist
 
+def do_chat_alerts():
+	now_crs = make_pricelist(get_prices(datetime.now()))
+	#old_crs = make_pricelist(get_prices(datetime.now() - timedelta(hours = 1)))
+	#if not old_crs: continue
+	chat_alerts = get_data('chat_alerts')
+	for chat in chat_alerts:
+		alerts = json.loads(chat['alerts'])
+		msg = {'chat': {'id': chat['id']}}
+		for key, value in now_crs.items():
+			dta = False
+			for alert in alerts:
+				if alert['valute'].upper() == key:
+					dta = alert
+					break
+			if dta:
+				old_prc = dta['price']
+				old_tim = dta['time']
+				porog = int(dta['porog'])
+				chg = ((value - old_prc)/value)*100
+				timediff = (datetime.now() - datetime.strptime(old_tim, "%d.%m.%Y %H:%M:%S"))
+				
+				if abs(chg)>porog:
+					if chg > 0:
+						chg_str = '▲'#random.choice(['вырос', 'пульнул', 'отрос', 'поднялся'])
+					else:
+						chg_str = '▼'#random.choice(['упал', 'дропнулся', 'рухнул', 'опустился'])
+					if timediff.days: strtd = str(timediff.days) + ' д.'
+					elif (timediff.seconds//3600)>0: strtd = str(timediff.seconds//3600)+' ч.'
+					else:
+						mins = (timediff.seconds//60)%60
+						strtd = str(mins) +' мин.'
+					val_str = key
+					if val_str == 'USD': val_str = 'Биток'
+					elif val_str == 'ETH': val_str = 'Эфир'
+					elif val_str == 'RUB': val_str = 'Биток к рублю'
+					res_str = val_str+'  '+str(int(abs(chg)))+'%'+chg_str+'  за '+str(strtd)+'   '+str(value) #zec  2%▲  за 1 ч.   0.05111
+					#res_str = val_str+' '+str(value)+' ('+str(int(abs(chg)))+'%'+chg_str+') за '+str(strtd) #zec 0.05111 (2%▲) за 1 ч.
+					set_alert(msg, dta['valute'], int(dta['porog']))
+					say(msg,res_str)
+
+getcourses()
+
 try:
 	while 1:
-		time.sleep(10)
-		now_crs = make_pricelist(get_prices(datetime.now()))
-		#old_crs = make_pricelist(get_prices(datetime.now() - timedelta(hours = 1)))
-		#if not old_crs: continue
-		chat_alerts = get_data('chat_alerts')
-		for chat in chat_alerts:
-			alerts = json.loads(chat['alerts'])
-			msg = {'chat': {'id': chat['id']}}
-			for key, value in now_crs.items():
-				dta = False
-				for alert in alerts:
-					if alert['valute'].upper() == key:
-						dta = alert
-						break
-				if dta:
-					old_prc = dta['price']
-					old_tim = dta['time']
-					porog = int(dta['porog'])
-					chg = ((value - old_prc)/value)*100
-					timediff = (datetime.now() - datetime.strptime(old_tim, "%d.%m.%Y %H:%M:%S"))
-					
-					if abs(chg)>porog:
-						if chg > 0:
-							chg_str = '▲'#random.choice(['вырос', 'пульнул', 'отрос', 'поднялся'])
-						else:
-							chg_str = '▼'#random.choice(['упал', 'дропнулся', 'рухнул', 'опустился'])
-						if timediff.days: strtd = str(timediff.days) + ' д.'
-						elif (timediff.seconds//3600)>0: strtd = str(timediff.seconds//3600)+' ч.'
-						else:
-							mins = (timediff.seconds//60)%60
-							strtd = str(mins) +' мин.'
-						val_str = key
-						if val_str == 'USD': val_str = 'Биток'
-						elif val_str == 'ETH': val_str = 'Эфир'
-						elif val_str == 'RUB': val_str = 'Биток к рублю'
-						res_str = val_str+'  '+str(int(abs(chg)))+'%'+chg_str+'  за '+str(strtd)+'   '+str(value) #zec  2%▲  за 1 ч.   0.05111
-						#res_str = val_str+' '+str(value)+' ('+str(int(abs(chg)))+'%'+chg_str+') за '+str(strtd) #zec 0.05111 (2%▲) за 1 ч.
-						set_alert(msg, dta['valute'], int(dta['porog']))
-						say(msg,res_str)
+		time.sleep(10)		
 except KeyboardInterrupt:
 	stopthreads()
+	db.commit()
+	db.close()
