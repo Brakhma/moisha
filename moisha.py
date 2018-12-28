@@ -19,6 +19,7 @@ import threading
 init() #colorama init
 
 logfolder = "/var/www/brakhma.ru/html/botlogs/"
+upd_interval = 300 #интервал обновления курсов
 
 #~~~~~~~~~MODULES
 try:
@@ -119,8 +120,7 @@ def get_prices(time):
 	if prices_cache: # слишком часто ходим в базу, бессмысленно и дорого.
 		timediff = (datetime.now() - datetime.strptime(prices_cache['time'][0:19], "%Y-%m-%d %H:%M:%S"))
 		#print(timediff)
-		mins = (timediff.seconds//60)%60
-		if mins < 2: 
+		if timediff.seconds < upd_interval: 
 			#print(mins)
 			return prices_cache
 	db.row_factory = dict_factory
@@ -328,7 +328,7 @@ def getcourses():
 		return False
 	set_prices(bcinfo,polo)
 	do_chat_alerts()
-	getcourses_timer = threading.Timer(300, getcourses)
+	getcourses_timer = threading.Timer(upd_interval, getcourses)
 	getcourses_timer.name = 'getcourses_timer'
 	getcourses_timer.start()
 
@@ -488,7 +488,8 @@ def printthreads():
 	strr=''
 	for thing in threading.enumerate():
 		strr+= str(thing)+'\n'
-	print (strr)
+	print(strr)
+	return(strr)
 
 def make_pricelist(prices):
 	pricelist = {}
