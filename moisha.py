@@ -455,6 +455,13 @@ def process (msg):
 			weblog('reload error\n'+str(err))
 			pass
 		return
+	if (msg['text'].lower().startswith('/testfunc')):
+		try:
+			say(msg, 'работает')
+		except Exception as err:
+			print (err)
+			pass
+		return
 	# %)		
 	if (msg['text'].lower().startswith('мойша вангани')):
 		bot.sendSticker(msg['chat']['id'], 'CAADAgADogEAAr8cUgGhSaLkA6gjXAI')
