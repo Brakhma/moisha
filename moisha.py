@@ -387,7 +387,7 @@ def kurs (valute = False):
 		return course_fiat(valute)
 
 def process (msg):
-	global reg_answers, pause, db
+	global reg_answers, pause, db, run
 	answer = ''
 	if (msg['text'].lower().startswith('/alert')):
 		try:
@@ -437,6 +437,22 @@ def process (msg):
 		except Exception as err:
 			print (err)
 			weblog('process noalert\n'+str(err))
+			pass
+		return
+	if (msg['text'].lower().startswith('/reload')):
+		try:
+			if (msg['from']['username'] != "Brakhma"):
+				err = user_name(msg)+' TRIES TO RELOOOAD!'
+				print (err)
+				weblog(err)
+				return
+			os.system("git pull")
+			#os.system("python3 "+__file__)
+			stopthreads()
+			run = False
+		except Exception as err:
+			print (err)
+			weblog('reload error\n'+str(err))
 			pass
 		return
 	# %)		
@@ -551,9 +567,11 @@ def do_chat_alerts():
 
 getcourses()
 
+run = True
 try:
-	while 1:
-		time.sleep(10)		
+	while run:
+		time.sleep(2)
+	os.system("./reload.sh &") #запустится только при /reload	
 except KeyboardInterrupt:
 	stopthreads()
 	db.commit()
