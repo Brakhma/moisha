@@ -74,7 +74,7 @@ try:
 	db.execute('''CREATE TABLE IF NOT EXISTS chat_alerts(id int, alerts)''') #[{time:'', valute:'', price:'', porog:''}]
 	db.execute('''CREATE TABLE IF NOT EXISTS settings(setting, value)''')
 except Exception as err:
-	weblog(err)
+	weblog('db create tables\n'+str(err))
 	print(err)
 db.commit()
 
@@ -95,7 +95,7 @@ def get_data(table, cond = False):
 		data = cur.fetchall()
 		return data
 	except Exception as err:
-		weblog(err)
+		weblog('get_data\n'+str(err))
 		print(err)
 
 def set_prices(bcinfo, polo):
@@ -109,7 +109,7 @@ def set_prices(bcinfo, polo):
 			db.commit()
 			done = True
 		except Exception as err:
-			weblog(err)
+			weblog('set_prices\n'+str(err))
 			print(err)
 
 
@@ -129,7 +129,7 @@ def get_prices(time):
 		cur.execute('''select * from prices where time < ? order by time desc''', (time,))
 	except Exception as err:
 		print(err)
-		weblog(err)
+		weblog('get_prices\n'+str(err))
 	data = cur.fetchone()
 	#print(data)
 	prices_cache = data
@@ -188,7 +188,7 @@ def remove_alert(msg, valute):
 	try:
 		alerts = get_alerts(id)
 	except Exception as err:
-		weblog(err)
+		weblog('remove_alert\n'+str(err))
 		print(err)
 		
 	if alerts:
@@ -225,7 +225,7 @@ def set_setting(setting, value):
 			db.commit()
 			done = True
 		except Exception as err:
-			weblog(err)
+			weblog('set_setting\n'+str(err))
 			print(err)
 
 #как называть пользователя в консоли и логах	
@@ -274,7 +274,10 @@ def weblog(param):
 			log.write((datetime.now()).strftime("%d.%m.%Y %H:%M:%S") + '\n'+param+'\n')
 	except FileNotFoundError:
 		print('Weblog folder not found.')
-		pass		
+		pass
+	except Exception as err:
+		print(err)
+		pass
 
 def say(msg,answer):
 	#обработка ключевых слов из словаря
@@ -311,7 +314,7 @@ def getcourses():
 		bcinfo = received_data
 	except Exception as err:
 		print(err)
-		weblog(err)
+		weblog('getcourses bcinfo\n'+str(err))
 		return False
 	#poloniex
 	try:
@@ -321,7 +324,7 @@ def getcourses():
 		polo = received_data
 	except Exception as err:
 		print(err)
-		weblog(err)
+		weblog('getcourses polo\n'+str(err))
 		return False
 	set_prices(bcinfo,polo)
 	do_chat_alerts()
@@ -415,7 +418,7 @@ def process (msg):
 					set_alert(msg, curr)
 		except Exception as err:
 			print (err)
-			weblog(err)
+			weblog('process alert\n'+str(err))
 			pass
 		return
 	if (msg['text'].lower().startswith('/noalert')):
@@ -433,7 +436,7 @@ def process (msg):
 				remove_alert(msg, curr)
 		except Exception as err:
 			print (err)
-			weblog(err)
+			weblog('process noalert\n'+str(err))
 			pass
 		return
 	# %)		
@@ -502,44 +505,48 @@ def make_pricelist(prices):
 	return pricelist
 
 def do_chat_alerts():
-	now_crs = make_pricelist(get_prices(datetime.now()))
-	#old_crs = make_pricelist(get_prices(datetime.now() - timedelta(hours = 1)))
-	#if not old_crs: continue
-	chat_alerts = get_data('chat_alerts')
-	for chat in chat_alerts:
-		alerts = json.loads(chat['alerts'])
-		msg = {'chat': {'id': chat['id']}}
-		for key, value in now_crs.items():
-			dta = False
-			for alert in alerts:
-				if alert['valute'].upper() == key:
-					dta = alert
-					break
-			if dta:
-				old_prc = dta['price']
-				old_tim = dta['time']
-				porog = int(dta['porog'])
-				chg = ((value - old_prc)/value)*100
-				timediff = (datetime.now() - datetime.strptime(old_tim, "%d.%m.%Y %H:%M:%S"))
-				
-				if abs(chg)>porog:
-					if chg > 0:
-						chg_str = '▲'#random.choice(['вырос', 'пульнул', 'отрос', 'поднялся'])
-					else:
-						chg_str = '▼'#random.choice(['упал', 'дропнулся', 'рухнул', 'опустился'])
-					if timediff.days: strtd = str(timediff.days) + ' д.'
-					elif (timediff.seconds//3600)>0: strtd = str(timediff.seconds//3600)+' ч.'
-					else:
-						mins = (timediff.seconds//60)%60
-						strtd = str(mins) +' мин.'
-					val_str = key
-					if val_str == 'USD': val_str = 'Биток'
-					elif val_str == 'ETH': val_str = 'Эфир'
-					elif val_str == 'RUB': val_str = 'Биток к рублю'
-					res_str = val_str+'  '+str(int(abs(chg)))+'%'+chg_str+'  за '+str(strtd)+'   '+str(value) #zec  2%▲  за 1 ч.   0.05111
-					#res_str = val_str+' '+str(value)+' ('+str(int(abs(chg)))+'%'+chg_str+') за '+str(strtd) #zec 0.05111 (2%▲) за 1 ч.
-					set_alert(msg, dta['valute'], int(dta['porog']))
-					say(msg,res_str)
+	try:
+		now_crs = make_pricelist(get_prices(datetime.now()))
+		#old_crs = make_pricelist(get_prices(datetime.now() - timedelta(hours = 1)))
+		#if not old_crs: continue
+		chat_alerts = get_data('chat_alerts')
+		for chat in chat_alerts:
+			alerts = json.loads(chat['alerts'])
+			msg = {'chat': {'id': chat['id']}}
+			for key, value in now_crs.items():
+				dta = False
+				for alert in alerts:
+					if alert['valute'].upper() == key:
+						dta = alert
+						break
+				if dta:
+					old_prc = dta['price']
+					old_tim = dta['time']
+					porog = int(dta['porog'])
+					chg = ((value - old_prc)/value)*100
+					timediff = (datetime.now() - datetime.strptime(old_tim, "%d.%m.%Y %H:%M:%S"))
+					
+					if abs(chg)>porog:
+						if chg > 0:
+							chg_str = '▲'#random.choice(['вырос', 'пульнул', 'отрос', 'поднялся'])
+						else:
+							chg_str = '▼'#random.choice(['упал', 'дропнулся', 'рухнул', 'опустился'])
+						if timediff.days: strtd = str(timediff.days) + ' д.'
+						elif (timediff.seconds//3600)>0: strtd = str(timediff.seconds//3600)+' ч.'
+						else:
+							mins = (timediff.seconds//60)%60
+							strtd = str(mins) +' мин.'
+						val_str = key
+						if val_str == 'USD': val_str = 'Биток'
+						elif val_str == 'ETH': val_str = 'Эфир'
+						elif val_str == 'RUB': val_str = 'Биток к рублю'
+						res_str = val_str+'  '+str(int(abs(chg)))+'%'+chg_str+'  за '+str(strtd)+'   '+str(value) #zec  2%▲  за 1 ч.   0.05111
+						#res_str = val_str+' '+str(value)+' ('+str(int(abs(chg)))+'%'+chg_str+') за '+str(strtd) #zec 0.05111 (2%▲) за 1 ч.
+						set_alert(msg, dta['valute'], int(dta['porog']))
+						say(msg,res_str)
+	except Exception as err:
+		weblog('do alerts\n'+str(err))
+		print(err)
 
 getcourses()
 
