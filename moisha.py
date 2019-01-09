@@ -306,6 +306,7 @@ def say(msg,answer):
 
 def getcourses():
 	#blockchain.info
+	success = True
 	try:
 	
 		request = urllib.request.Request('https://blockchain.info/ticker')
@@ -315,7 +316,7 @@ def getcourses():
 	except Exception as err:
 		print(err)
 		weblog('getcourses bcinfo\n'+str(err))
-		return False
+		success = False
 	#poloniex
 	try:
 		request = urllib.request.Request('https://poloniex.com/public?command=returnTicker')
@@ -325,12 +326,15 @@ def getcourses():
 	except Exception as err:
 		print(err)
 		weblog('getcourses polo\n'+str(err))
-		return False
-	set_prices(bcinfo,polo)
-	do_chat_alerts()
+		success = False
 	getcourses_timer = threading.Timer(upd_interval, getcourses)
 	getcourses_timer.name = 'getcourses_timer'
 	getcourses_timer.start()
+	if success:
+		set_prices(bcinfo,polo)
+		do_chat_alerts()
+	else:
+		return False
 
 def is_crypto(curr):
 	if curr.upper() == 'USDT': return False
@@ -442,6 +446,7 @@ def process (msg):
 	if (msg['text'].lower().startswith('/reload')):
 		try:
 			if (msg['from']['username'] != "Brakhma"):
+				say("Premission denied!")
 				err = user_name(msg)+' TRIES TO RELOOOAD!'
 				print (err)
 				weblog(err)
