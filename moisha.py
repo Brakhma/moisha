@@ -466,6 +466,12 @@ def process (msg):
 		answ = convertor(msg['text'].lower())
 		say(msg, answ)
 		return
+	
+	if re.match('((\d+\,\d+)|(\d+))( )([a-zA-Z]+)( to )([a-zA-Z]+)', msg['text'].lower()):
+		repl = (msg['text'].lower()).replace(',','.')
+		answ = convertor(repl)
+		say(msg, answ)
+		return
 
 	#обработка регулярок из словаря 
 	#/kurs в словаре, туда лучше складывать всё что требует нескольких алиасов или регулярки для запуска
