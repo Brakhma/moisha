@@ -446,10 +446,10 @@ def process (msg):
 	if (msg['text'].lower().startswith('/reload')):
 		try:
 			if (msg['from']['username'] != "Brakhma"):
-				say("Premission denied!")
-				err = user_name(msg)+' TRIES TO RELOOOAD!'
-				print (err)
-				weblog(err)
+				say("Permission denied!")
+				intruder = user_name(msg)+' TRIES TO RELOOOAD!'
+				print (intruder)
+				weblog(intruder)
 				return
 			os.system("git pull")
 			#os.system("python3 "+__file__)
