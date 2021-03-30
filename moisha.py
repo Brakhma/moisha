@@ -484,7 +484,7 @@ def process (msg):
 		if (re.match(pair['reg'], msg['text'].lower())):
 			answers = pair['answers']
 			answer = random.choice(answers)
-			say(msg,answer)
+			say(msg, answer)
 			return
 
 if not isfile('tgtoken'):
@@ -588,3 +588,5 @@ except KeyboardInterrupt:
 	stopthreads()
 	db.commit()
 	db.close()
+
+#just to test cicd
