@@ -450,7 +450,7 @@ def process (msg):
 			except:
 				usercheck = "nobody"
 			if (usercheck != "Brakhma"):
-				say("Permission denied!")
+				say(msg, "Permission denied!")
 				intruder = user_name(msg)+' TRIES TO RELOOOAD!'
 				print (intruder)
 				weblog(intruder)
