@@ -455,6 +455,7 @@ def process (msg):
 				print (intruder)
 				weblog(intruder)
 				return
+			weblog(user_name(msg)+' initiates reloading')
 			os.system("git pull")
 			#os.system("python3 "+__file__)
 			stopthreads()
