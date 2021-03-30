@@ -18,7 +18,6 @@ import threading
 
 init() #colorama init
 
-logfolder = "/var/www/brakhma.ru/html/botlogs/"
 upd_interval = 300 #интервал обновления курсов
 
 #~~~~~~~~~MODULES
@@ -75,7 +74,6 @@ try:
 	db.execute('''CREATE TABLE IF NOT EXISTS chat_alerts(id int, alerts)''') #[{time:'', valute:'', price:'', porog:''}]
 	db.execute('''CREATE TABLE IF NOT EXISTS settings(setting, value)''')
 except Exception as err:
-	weblog('db create tables\n'+str(err))
 	print(err)
 db.commit()
 
@@ -96,7 +94,6 @@ def get_data(table, cond = False):
 		data = cur.fetchall()
 		return data
 	except Exception as err:
-		weblog('get_data\n'+str(err))
 		print(err)
 
 def set_prices(bcinfo, polo):
@@ -110,7 +107,6 @@ def set_prices(bcinfo, polo):
 			db.commit()
 			done = True
 		except Exception as err:
-			weblog('set_prices\n'+str(err))
 			print(err)
 
 
@@ -129,7 +125,6 @@ def get_prices(time):
 		cur.execute('''select * from prices where time < ? order by time desc''', (time,))
 	except Exception as err:
 		print(err)
-		weblog('get_prices\n'+str(err))
 	data = cur.fetchone()
 	#print(data)
 	prices_cache = data
@@ -188,7 +183,6 @@ def remove_alert(msg, valute):
 	try:
 		alerts = get_alerts(id)
 	except Exception as err:
-		weblog('remove_alert\n'+str(err))
 		print(err)
 		
 	if alerts:
@@ -225,7 +219,6 @@ def set_setting(setting, value):
 			db.commit()
 			done = True
 		except Exception as err:
-			weblog('set_setting\n'+str(err))
 			print(err)
 
 #как называть пользователя в консоли и логах	
@@ -268,17 +261,6 @@ class YourBot(telepot.Bot):
 	def on_edited_chat_message(self, msg):
 		pass
 
-def weblog(param):
-	try:
-		with open(logfolder+'moisha.txt', 'a', encoding="utf8") as log:
-			log.write((datetime.now()).strftime("%d.%m.%Y %H:%M:%S") + '\n'+param+'\n')
-	except FileNotFoundError:
-		print('Weblog folder not found.')
-		pass
-	except Exception as err:
-		print(err)
-		pass
-
 def say(msg,answer):
 	#обработка ключевых слов из словаря
 	if '[name]' in  answer: answer = answer.replace('[name]', user_name(msg))
@@ -315,7 +297,6 @@ def getcourses():
 		bcinfo = received_data
 	except Exception as err:
 		print(err)
-		weblog('getcourses bcinfo\n'+str(err))
 		success = False
 	#poloniex
 	try:
@@ -325,7 +306,6 @@ def getcourses():
 		polo = received_data
 	except Exception as err:
 		print(err)
-		weblog('getcourses polo\n'+str(err))
 		success = False
 	getcourses_timer = threading.Timer(upd_interval, getcourses)
 	getcourses_timer.name = 'getcourses_timer'
@@ -422,7 +402,6 @@ def process (msg):
 					set_alert(msg, curr)
 		except Exception as err:
 			print (err)
-			weblog('process alert\n'+str(err))
 			pass
 		return
 	if (msg['text'].lower().startswith('/noalert')):
@@ -440,7 +419,6 @@ def process (msg):
 				remove_alert(msg, curr)
 		except Exception as err:
 			print (err)
-			weblog('process noalert\n'+str(err))
 			pass
 		return
 	if (msg['text'].lower().startswith('/reload')):
@@ -453,16 +431,13 @@ def process (msg):
 				say(msg, "Permission denied!")
 				intruder = user_name(msg)+' TRIES TO RELOOOAD!'
 				print (intruder)
-				weblog(intruder)
 				return
-			weblog(user_name(msg)+' initiates reloading')
 			os.system("git pull")
 			#os.system("python3 "+__file__)
 			stopthreads()
 			run = False
 		except Exception as err:
 			print (err)
-			weblog('reload error\n'+str(err))
 			pass
 		return
 
@@ -504,7 +479,6 @@ bot = YourBot(TOKEN)
 bot.message_loop()
 
 print (Fore.YELLOW + bot.getMe()['first_name']+' (@'+bot.getMe()['username']+')'+Fore.WHITE)
-weblog('started')
 
 def stopthreads():
 	for thing in threading.enumerate():
@@ -574,7 +548,6 @@ def do_chat_alerts():
 						set_alert(msg, dta['valute'], int(dta['porog']))
 						say(msg,res_str)
 	except Exception as err:
-		weblog('do alerts\n'+str(err))
 		print(err)
 
 getcourses()
