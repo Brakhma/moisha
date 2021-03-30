@@ -445,7 +445,11 @@ def process (msg):
 		return
 	if (msg['text'].lower().startswith('/reload')):
 		try:
-			if (msg['from']['username'] != "Brakhma"):
+			try:
+				usercheck = msg['from']['username']
+			except:
+				usercheck = "nobody"
+			if (usercheck != "Brakhma"):
 				say("Permission denied!")
 				intruder = user_name(msg)+' TRIES TO RELOOOAD!'
 				print (intruder)
