@@ -588,5 +588,3 @@ except KeyboardInterrupt:
 	stopthreads()
 	db.commit()
 	db.close()
-
-#just to test cicd
