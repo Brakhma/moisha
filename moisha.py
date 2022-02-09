@@ -23,6 +23,7 @@ from okex import okex
 cg = CoinGeckoAPI()
 
 init() #colorama init
+os.chdir(os.path.dirname(__file__))
 
 upd_interval = 60 #интервал обновления курсов
 
