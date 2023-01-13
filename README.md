@@ -25,6 +25,3 @@ pycoingecko
 /info !coin_id - информация по id (bitcoin, ethereum, можно найти через search)  
 
 Может работать через https прокси.
-
-Для связи:  
-telegram:@brakhma
