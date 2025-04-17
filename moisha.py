@@ -105,13 +105,13 @@ cur = db.cursor()
 try:
 	#db.execute('''CREATE TABLE IF NOT EXISTS prices(time datetime, bcinfo, polo)''')
 	db.execute('''CREATE TABLE IF NOT EXISTS chat_alerts(
-                  id INTEGER PRIMARY KEY,
-                  alerts TEXT
-                )''') # ИЗМЕНЕНО: id как PRIMARY KEY
+				  id INTEGER PRIMARY KEY,
+				  alerts TEXT
+				)''') # ИЗМЕНЕНО: id как PRIMARY KEY
 	db.execute('''CREATE TABLE IF NOT EXISTS settings(
-                  setting TEXT PRIMARY KEY,
-                  value TEXT
-                )''') # ИЗМЕНЕНО: setting как PRIMARY KEY
+				  setting TEXT PRIMARY KEY,
+				  value TEXT
+				)''') # ИЗМЕНЕНО: setting как PRIMARY KEY
 except Exception as err:
 	print("Ошибка при создании таблиц БД:")
 	print(traceback.format_exc())
@@ -619,13 +619,13 @@ def get_info_from_id(coin_id):
 		bitbucket_repos = [b for b in repos.get('bitbucket', []) if b]
 		if github_repos: links_str += "*GitHub:* " + '\n'.join(github_repos) + "\n"
 		if bitbucket_repos: links_str += "*Bitbucket:* " + '\n'.join(bitbucket_repos) + "\n"
-        # Twitter
+		# Twitter
 		twitter = links_data.get('twitter_screen_name')
 		if twitter: links_str += f"*Twitter:* [@{twitter}](https://twitter.com/{twitter})\n"
-        # Telegram
+		# Telegram
 		telegram = links_data.get('telegram_channel_identifier')
 		if telegram: links_str += f"*Telegram:* @{telegram}\n"
-        # Reddit
+		# Reddit
 		reddit = links_data.get('subreddit_url')
 		if reddit: links_str += f"*Reddit:* {reddit}\n"
 
@@ -905,8 +905,8 @@ def process (msg):
 				continue
 
 		if shares_total == 0: # Обработка, если нет валидных долей
-		    say(msg, "В фонде нет валидных долей.")
-		    return
+			say(msg, "В фонде нет валидных долей.")
+			return
 
 		if my_cut_amount == 0:
 			say(msg, 'Таки тьфу на тебя, твоей доли нет.')
@@ -929,8 +929,8 @@ def process (msg):
 			# result = account_api.get_account_balance()
 			# balances = result.get('data', [{}])[0].get('details', [])
 			# for i in balances:
-			#    total_eq_usd += float(i.get('eqUsd', 0))
-			#    fund_str += f"{i.get('ccy', 'N/A')}: {i.get('cashBal', 'N/A')}\n"
+			#	total_eq_usd += float(i.get('eqUsd', 0))
+			#	fund_str += f"{i.get('ccy', 'N/A')}: {i.get('cashBal', 'N/A')}\n"
 			fund_str += "ОШИБКА: Функция /fund требует обновления для OKEx v5 API\n" # Заглушка
 
 			# Получение ордеров (тоже требует адаптации для v5)
@@ -939,12 +939,12 @@ def process (msg):
 			# orders = orders_result.get('data', [])
 			# if orders: fund_str+='*Открытые ордера:*\n'
 			# for i in orders:
-			#    fund_str+=f"{i['instId']} {i['side']} {i['sz']} x {i['px']}\n"
+			#	fund_str+=f"{i['instId']} {i['side']} {i['sz']} x {i['px']}\n"
 
 		except ImportError:
 			fund_str += "ОШИБКА: Не найдены ключи API для OKEx в settings.py\n"
 		except NameError:
-		    fund_str += "ОШИБКА: Не найдены ключи API для OKEx (NameError)\n"
+			fund_str += "ОШИБКА: Не найдены ключи API для OKEx (NameError)\n"
 		except Exception as e:
 			fund_str += f"Ошибка при получении данных с OKEx: {e}\n"
 			print(f"Ошибка OKEx: {e}")
@@ -1018,22 +1018,22 @@ def process (msg):
 
 			found_user = False
 			for i in range(len(shares)):
-			    # Проверяем формат элемента списка
-			    if isinstance(shares[i], list) and len(shares[i]) == 2:
-			        try:
-			            if int(shares[i][0]) == new_user_id:
-			                # Обновляем долю существующего пользователя
-			                shares[i][1] = str(int(shares[i][1]) + new_shares_amount)
-			                found_user = True
-			                break
-			        except (ValueError, TypeError):
-			            # Пропускаем или удаляем некорректные записи
-			            print(f"Некорректная запись в shares при обновлении: {shares[i]}")
-			            # можно добавить shares.pop(i) или continue
-			            continue
-			    else:
-			        print(f"Некорректный формат элемента в shares: {shares[i]}")
-			        continue
+				# Проверяем формат элемента списка
+				if isinstance(shares[i], list) and len(shares[i]) == 2:
+					try:
+						if int(shares[i][0]) == new_user_id:
+							# Обновляем долю существующего пользователя
+							shares[i][1] = str(int(shares[i][1]) + new_shares_amount)
+							found_user = True
+							break
+					except (ValueError, TypeError):
+						# Пропускаем или удаляем некорректные записи
+						print(f"Некорректная запись в shares при обновлении: {shares[i]}")
+						# можно добавить shares.pop(i) или continue
+						continue
+				else:
+					print(f"Некорректный формат элемента в shares: {shares[i]}")
+					continue
 
 
 			if not found_user:
@@ -1106,8 +1106,8 @@ except ImportError:
 
 # ДОБАВЛЕНО: Проверка токена
 if not TOKEN:
-    print("Токен бота не задан. Выход.")
-    sys.exit(1)
+	print("Токен бота не задан. Выход.")
+	sys.exit(1)
 
 bot = YourBot(TOKEN)
 print (Fore.YELLOW + bot.getMe()['first_name']+' (@'+bot.getMe()['username']+')'+Fore.WHITE)
@@ -1255,53 +1255,136 @@ def refresh_coins_list_if_needed(force_refresh=False):
 		# print("Используется кэшированный список монет.") # Отладка
 		return True # Список актуален
 
-# ИЗМЕНЕНО: get_id_by_string использует кэшированный список и не делает API запросов
+      
 def get_id_by_string(search_string):
-	global coins_list
-	search_string_lower = search_string.lower()
+    global coins_list, cg # Убедимся, что cg доступен
+    search_string_lower = search_string.lower()
 
-	# Убедимся, что список монет загружен (но не обновляем его здесь принудительно)
-	if not coins_list:
-		print("Предупреждение: get_id_by_string вызван с пустым кэшем coins_list.")
-		# Попробуем загрузить из БД, если есть
-		saved_list_json = get_setting('coins_list')
-		if saved_list_json:
-			try:
-				coins_list = json.loads(saved_list_json)
-				print("Загружен список монет из БД.")
-			except json.JSONDecodeError:
-				print("Ошибка декодирования списка монет из БД.")
-				return False # Не можем найти без списка
-		else:
-			# Если и в БД нет, пытаемся обновить принудительно
-			if not refresh_coins_list_if_needed(force_refresh=True):
-				return False # Не удалось обновить
+    # --- Шаг 0: Хардкод для самых частых конфликтов ---
+    if search_string_lower == 'btc':
+        # print("DEBUG: Хардкод 'btc' -> 'bitcoin'") # Отладка
+        return 'bitcoin'
+    # Можно добавить другие, например:
+    # if search_string_lower == 'eth':
+    #    return 'ethereum'
 
-	# 1. Поиск по ID (точное совпадение)
-	for coin in coins_list:
-		if coin.get('id', '').lower() == search_string_lower:
-			return coin['id'] # Нашли точное совпадение по ID
+    # --- Проверка и загрузка основного списка монет ---
+    if not coins_list:
+        # ... (код загрузки coins_list, как и раньше) ...
+        print("Предупреждение: get_id_by_string вызван с пустым кэшем coins_list.")
+        saved_list_json = get_setting('coins_list')
+        if saved_list_json:
+            try:
+                coins_list = json.loads(saved_list_json)
+                print("Загружен список монет из БД.")
+            except json.JSONDecodeError:
+                print("Ошибка декодирования списка монет из БД.")
+                if not refresh_coins_list_if_needed(force_refresh=True): return False
+        else:
+            if not refresh_coins_list_if_needed(force_refresh=True): return False
 
-	# 2. Поиск по символу (точное совпадение)
-	matches_by_symbol = []
-	for coin in coins_list:
-		if coin.get('symbol', '').lower() == search_string_lower:
-			matches_by_symbol.append(coin['id'])
+    # --- Шаг 1: Поиск по ID (точное совпадение) ---
+    for coin in coins_list:
+        coin_id = coin.get('id')
+        if coin_id and coin_id.lower() == search_string_lower:
+            # print(f"DEBUG: Найдено по ID: {coin['id']}") # Отладка
+            return coin['id']
 
-	if len(matches_by_symbol) == 1:
-		return matches_by_symbol[0] # Одно совпадение по символу
-	elif len(matches_by_symbol) > 1:
-		# Если несколько совпадений по символу, возвращаем первое (самое простое решение)
-		# В идеале, можно было бы запросить детали и сравнить score, но это вернет rate limit
-		print(f"Найдено несколько совпадений по символу '{search_string}': {matches_by_symbol}. Возвращаем первое: {matches_by_symbol[0]}")
-		return matches_by_symbol[0]
-	else:
-		# 3. Если точных совпадений нет, можно добавить поиск по имени (но это менее надежно)
-		# for coin in coins_list:
-		#	 if coin.get('name', '').lower() == search_string_lower:
-		#		 return coin['id']
-		return False # Ничего не найдено
+    # --- Шаг 2: Поиск по символу (точное совпадение) ---
+    matches_coins = []
+    for coin in coins_list:
+        coin_symbol = coin.get('symbol')
+        coin_id = coin.get('id')
+        if coin_symbol and coin_id and coin_symbol.lower() == search_string_lower:
+            matches_coins.append(coin)
 
+    # --- Шаг 3: Обработка результатов поиска по символу ---
+    if len(matches_coins) == 1:
+        # Однозначное совпадение по символу
+        # print(f"DEBUG: Найдено по символу (1): {matches_coins[0]['id']}") # Отладка
+        return matches_coins[0]['id']
+    elif len(matches_coins) > 1:
+        # Несколько совпадений - РАЗРЕШЕНИЕ КОНФЛИКТА
+        conflicting_ids = [c['id'] for c in matches_coins]
+        setting_key = f"symbol_resolution_{search_string_lower}"
+        print(f"Обнаружен конфликт символа '{search_string_lower}': {conflicting_ids}.")
+
+        # Проверка сохраненного решения в БД
+        saved_resolution = get_setting(setting_key)
+        if saved_resolution:
+            # Убедимся, что сохраненный ID все еще валиден (мало ли)
+            if any(c['id'] == saved_resolution for c in matches_coins):
+                 print(f"Используется сохраненное разрешение из БД: '{search_string_lower}' -> '{saved_resolution}'")
+                 return saved_resolution
+            else:
+                 print(f"Сохраненное разрешение '{saved_resolution}' для '{search_string_lower}' больше не актуально среди конфликтующих ID. Попытка нового разрешения.")
+                 # В этом случае продолжаем, чтобы найти новое решение
+
+        # Если нет в БД или старое неактуально - получаем market cap
+        print(f"Попытка разрешения по market cap через API...")
+        best_id = None
+        max_market_cap = -1 # Начинаем с -1
+
+        try:
+            # Делаем ОДИН запрос для всех конфликтующих ID
+            # ВАЖНО: get_coins_markets может вернуть данные не в том порядке, как ID в запросе
+            market_data = cg.get_coins_markets(ids=conflicting_ids, vs_currency='usd') # Запрашиваем только USD, market_cap
+
+            if not market_data:
+                 print("Ошибка: API get_coins_markets вернул пустой результат.")
+                 # Возвращаем первый как запасной вариант
+                 best_id = conflicting_ids[0]
+                 print(f"Не удалось получить данные о капитализации. Возвращаем первый ID: {best_id}")
+
+            else:
+                # Ищем монету с максимальной капитализацией
+                for data in market_data:
+                    current_id = data.get('id')
+                    current_cap = data.get('market_cap')
+                    # print(f"  Проверка: {current_id}, Капитализация: {current_cap}") # Отладка
+                    # Обработка случая, когда market_cap = None
+                    if current_id and current_cap is not None:
+                        if current_cap > max_market_cap:
+                            max_market_cap = current_cap
+                            best_id = current_id
+
+                if best_id:
+                    print(f"Выбран ID '{best_id}' с максимальной капитализацией ({max_market_cap}).")
+                    # Сохраняем результат в БД
+                    if set_setting(setting_key, best_id):
+                        print(f"Разрешение для '{search_string_lower}' -> '{best_id}' сохранено в БД.")
+                    else:
+                        print(f"Ошибка сохранения разрешения для '{search_string_lower}' в БД.")
+                else:
+                    # Если по какой-то причине не нашли ID с > -1 капитализацией
+                    best_id = conflicting_ids[0]
+                    print(f"Не удалось определить ID с максимальной капитализацией. Возвращаем первый ID: {best_id}")
+
+
+        except (requests.exceptions.RequestException, ValueError, KeyError) as e:
+            print(f"Ошибка API при получении market cap для разрешения конфликта '{search_string_lower}': {e}")
+            if isinstance(e, ValueError) and '429' in str(e):
+                print("Сработал Rate Limit API!")
+                time.sleep(10) # Небольшая пауза
+            # Возвращаем первый как запасной вариант при любой ошибке API
+            best_id = conflicting_ids[0]
+            print(f"Возвращаем первый ID из-за ошибки API: {best_id}")
+        except Exception as e: # Ловим прочие неожиданные ошибки
+             print(f"Неожиданная ошибка при разрешении конфликта для '{search_string_lower}': {e}")
+             traceback.print_exc()
+             best_id = conflicting_ids[0]
+             print(f"Возвращаем первый ID из-за неожиданной ошибки: {best_id}")
+
+
+        return best_id # Возвращаем результат (лучший или первый)
+
+    else: # len(matches_coins) == 0
+        # --- Шаг 4: Поиск по имени (если по символу не нашли) - опционально ---
+        # ... (можно добавить, если нужно) ...
+        # print(f"DEBUG: Не найдено ни по ID, ни по символу: {search_string_lower}") # Отладка
+        return False # Ничего не найдено
+
+    
 
 # ИЗМЕНЕНО: get_sym_by_id использует кэшированный список
 def get_sym_by_id(coin_id):
@@ -1535,14 +1618,14 @@ def recheck_list():
 
 				# Проверяем длину сообщения перед добавлением
 				if len(base_message) + len(full_diff_str) + len(coin_block) > 4000: # Оставляем запас
-				    # Отправляем накопленное сообщение
-				    for chat_id in newalerts_chat_ids:
-				        say({'chat': {'id': chat_id}}, base_message + full_diff_str, silent=True)
-				    # Начинаем новое сообщение
-				    full_diff_str = coin_block
-				    time.sleep(0.5) # Пауза между сообщениями
+					# Отправляем накопленное сообщение
+					for chat_id in newalerts_chat_ids:
+						say({'chat': {'id': chat_id}}, base_message + full_diff_str, silent=True)
+					# Начинаем новое сообщение
+					full_diff_str = coin_block
+					time.sleep(0.5) # Пауза между сообщениями
 				else:
-				    full_diff_str += coin_block
+					full_diff_str += coin_block
 
 				coins_processed += 1
 				if coins_processed % 5 == 0: time.sleep(0.2) # Небольшая пауза каждые 5 монет
@@ -1559,17 +1642,36 @@ def recheck_list():
 		print("Список old_coins_list в БД обновлен.")
 	# else: print ('Нет новых монет.') # Отладка
 
+run = True
 # Запускаем основной цикл получения курсов в отдельном потоке
 getcourses_loop() # Первый запуск сразу, остальные по таймеру внутри
 
 # Основной цикл программы
-run = True
 try:
 	print("Бот запущен. Ожидание сообщений...")
 	# bot.message_loop() # message_loop блокирующий, используем polling или webhook в проде
 	# Для простоты оставим message_loop, но помним о блокировке
-	bot.message_loop(run_forever=True if run else False) # Запускаем message_loop
+
+	# Запускаем message_loop так, чтобы он проверял 'run'
+	# Передаем 'run_forever=False' и управляем циклом сами
+	# Или используем подход с потоком для message_loop, если он блокирует
+	# Вариант 1: Простой цикл с message_loop (может блокировать другие вещи, если логика сложная)
+	# bot.message_loop(run_forever=run) # run_forever читается один раз при запуске, не подходит
+
+	# Вариант 2: Цикл while с небольшой задержкой (если message_loop не блокирует)
+	# bot.message_loop() # Запускаем обработку сообщений (она должна быть неблокирующей или в потоке)
 	# Этот цикл будет ждать, пока run не станет False (из-за /reload или KeyboardInterrupt)
+	# while run:
+	#	 time.sleep(1)
+
+	# Вариант 3 (Рекомендуемый, если telepot.message_loop блокирующий):
+	# Запускаем message_loop в отдельном потоке
+	from telepot.loop import MessageLoop
+	message_loop_thread = threading.Thread(target=MessageLoop(bot).run_forever, daemon=True)
+	message_loop_thread.start()
+	print("Message loop запущен в отдельном потоке.")
+
+	# Основной поток теперь просто ждет сигнала остановки
 	while run:
 		time.sleep(1)
 
@@ -1578,27 +1680,36 @@ try:
 
 except KeyboardInterrupt:
 	print("\nПолучено прерывание клавиатуры (Ctrl+C). Завершение работы...")
-	run = False # Сигнал для остановки таймеров и message_loop
+	run = False # Сигнал для остановки таймеров
 	stopthreads() # Отменяем таймеры
-	# Даем message_loop время завершиться (он должен сам остановиться из-за run=False)
-	time.sleep(2)
+	# Поток MessageLoop завершится сам, т.к. он daemon
 
 except Exception as e:
-    print("\nНепредвиденная ошибка в основном цикле:")
-    print(traceback.format_exc())
-    run = False
-    stopthreads()
+	print("\nНепредвиденная ошибка в основном цикле:")
+	print(traceback.format_exc())
+	run = False
+	stopthreads()
 
 finally:
+	# Даем немного времени на завершение потоков перед закрытием БД
+	time.sleep(2)
 	print("Закрытие соединения с БД...")
-	db.commit() # Финальный коммит на всякий случай
-	db.close()
+	try:
+		db.commit() # Финальный коммит на всякий случай
+		db.close()
+	except Exception as db_err:
+		print(f"Ошибка при закрытии БД: {db_err}")
+
 	print("Выход.")
 	# Если был /reload, запускаем скрипт перезапуска
-	if not run and 'usercheck' in locals() and usercheck == "Brakhma": # Проверяем, была ли команда reload
-	    print("Выполнение reload.sh...")
-	    try:
-	        # Запускаем в фоне, чтобы этот скрипт мог завершиться
-	        os.system("./reload.sh &")
-	    except Exception as e:
-	        print(f"Ошибка при запуске reload.sh: {e}")
+	# Используем try-except на случай, если usercheck не определен
+	try:
+		if not run and usercheck == "Brakhma": # Проверяем, была ли команда reload
+			print("Выполнение reload.sh...")
+			try:
+				# Запускаем в фоне, чтобы этот скрипт мог завершиться
+				os.system("./reload.sh &")
+			except Exception as reload_err:
+				print(f"Ошибка при запуске reload.sh: {reload_err}")
+	except NameError:
+		pass # usercheck не был определен, значит /reload не вызывался
